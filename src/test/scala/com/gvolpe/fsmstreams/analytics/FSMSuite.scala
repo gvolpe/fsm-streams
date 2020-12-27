@@ -1,6 +1,8 @@
 package com.gvolpe.fsmstreams
 package analytics
 
+import scala.annotation.tailrec
+
 import game._
 import generators._
 import Ticker.Count
@@ -10,9 +12,8 @@ import fs2.Stream
 import munit.ScalaCheckSuite
 import org.scalacheck.Prop._
 import org.scalacheck.Gen
-import scala.annotation.tailrec
 
-class FSMSpec extends ScalaCheckSuite {
+class FSMSuite extends ScalaCheckSuite {
 
   private val offTicker: Ticker[Id] = new Ticker[Id] {
     def get: Id[Tick]                                           = Tick.Off
@@ -122,10 +123,7 @@ class FSMSpec extends ScalaCheckSuite {
     description = "FSM level up",
     generator = genLevelUp,
     gemsAssertion = _ => 0,
-    // the last level we get is the one that will be finally set
-    levelAssertion = _.groupBy[PlayerId](_.playerId).map {
-      case (_, xs) => xs.map(_.newLevel.value).takeRight(1).headOption.getOrElse(0)
-    }.sum,
+    levelAssertion = Event._LevelUp_Last_Level_Sum.fold(_),
     pointsAssertion = _.size * 100
   )
 

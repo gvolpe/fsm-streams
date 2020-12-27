@@ -35,10 +35,10 @@ object generators {
       )
       .map(millis => Timestamp(Instant.ofEpochMilli(millis)))
 
-  val genPlayerIdFromPool: Gen[PlayerId] = {
-    val ids = List.fill(3)(UUID.randomUUID())
-    Gen.oneOf(ids.map(PlayerId.apply))
-  }
+  val uuidPool = List.fill(2)(UUID.randomUUID())
+
+  val genPlayerIdFromPool: Gen[PlayerId] =
+    Gen.oneOf(uuidPool.map(PlayerId.apply))
 
   val genLevelUp: Gen[Event.LevelUp] =
     for {
