@@ -10,8 +10,8 @@ import Ticker.Count
 import cats.Id
 import fs2.Stream
 import munit.ScalaCheckSuite
-import org.scalacheck.Prop._
 import org.scalacheck.Gen
+import org.scalacheck.Prop._
 
 class FSMSuite extends ScalaCheckSuite {
 
@@ -23,7 +23,7 @@ class FSMSuite extends ScalaCheckSuite {
 
   private def gems(res: Map[PlayerId, Agg]): Int   = res.values.toList.flatMap(_.gems.values.toList).sum
   private def level(res: Map[PlayerId, Agg]): Int  = res.values.toList.map(_.level.value).sum
-  private def points(res: Map[PlayerId, Agg]): Int = res.values.toList.map(_.points).sum
+  private def points(res: Map[PlayerId, Agg]): Int = res.values.toList.map(_.points.value).sum
 
   private val fsm = Engine.fsm[Id](offTicker)
 

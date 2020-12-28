@@ -37,7 +37,7 @@ class EngineSuite extends IOSuite {
 
           val level = Event._LevelUp_Last_Level_Sum.fold(events)
 
-          assertEquals(result.map(_.points).sum, score)
+          assertEquals(result.map(_.points.value).sum, score)
           assertEquals(result.size, numberOfPlayers)
           assertEquals(result.map(_.level.value).sum, level)
           assertEquals(result.map(_.gems.values.toList.sum).sum, gemCollectedEvents)

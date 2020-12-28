@@ -2,6 +2,7 @@ package com.gvolpe.fsmstreams.analytics
 
 import com.gvolpe.fsmstreams.analytics.Ticker.Count
 import com.gvolpe.fsmstreams.game._
+import com.gvolpe.fsmstreams.newtype.numeric._
 
 import cats._
 import cats.effect._

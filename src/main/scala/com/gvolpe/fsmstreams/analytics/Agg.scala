@@ -6,7 +6,7 @@ import monocle.macros._
 
 case class Agg(
     level: Level,
-    points: Int,
+    points: Points,
     gems: Map[GemType, Int]
 ) {
   def summary(pid: PlayerId, ts: Timestamp): Summary =
@@ -14,7 +14,7 @@ case class Agg(
 }
 
 object Agg {
-  def empty = Agg(level = Level(0), points = 0, gems = Map.empty)
+  def empty = Agg(Level(0), Points(0), Map.empty)
 
   val _Gems   = GenLens[Agg](_.gems)
   val _Level  = GenLens[Agg](_.level)
@@ -24,7 +24,7 @@ object Agg {
 case class Summary(
     playerId: PlayerId,
     level: Level,
-    points: Int,
+    points: Points,
     gems: Map[GemType, Int],
     createdAt: Timestamp
 )

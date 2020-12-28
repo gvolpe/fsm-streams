@@ -18,7 +18,7 @@ import fs2.Stream
 trait Ticker[F[_]] {
 
   /**
-    * @return the current value of the Tick.
+    * @return the current value of the counter Tick.
     */
   def get: F[Tick]
 
@@ -41,7 +41,7 @@ trait Ticker[F[_]] {
 object Ticker {
   type Count = Int
 
-  def create[F[_]: Concurrent: Timer](
+  def create[F[_]: Clock: Concurrent](
       maxNrOfEvents: Int,
       timeWindow: FiniteDuration
   ): F[Ticker[F]] =
@@ -67,7 +67,7 @@ object Ticker {
           val d = timeWindow.toNanos
 
           def go(lastSpikeNanos: Long): Stream[F, Tick] =
-            Stream.eval((F.clock.monotonic(NANOSECONDS), get).tupled).flatMap {
+            Stream.eval((F.monotonic(NANOSECONDS), get).tupled).flatMap {
               case (now, tick) =>
                 if ((now - lastSpikeNanos) > d || tick === Tick.On) Stream.emit(Tick.On) ++ go(now)
                 else Stream.emit(Tick.Off) ++ go(lastSpikeNanos)
