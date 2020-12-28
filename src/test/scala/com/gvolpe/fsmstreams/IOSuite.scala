@@ -15,6 +15,4 @@ trait IOSuite extends ScalaCheckSuite {
     })
 
   def ioTest[A](ioa: IO[A]): A = ioa.unsafeRunSync()
-
-  def assertIO(b: Boolean)(implicit loc: Location): IO[Unit] = IO(assert(b))
 }

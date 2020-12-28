@@ -72,7 +72,7 @@ object Ticker {
                 if ((now - lastSpikeNanos) > d || tick === Tick.On) Stream.emit(Tick.On) ++ go(now)
                 else Stream.emit(Tick.Off) ++ go(lastSpikeNanos)
             }
-          go(0).drop(1)
+          go(0).tail
         }
 
       }
