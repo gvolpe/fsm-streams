@@ -15,7 +15,7 @@ import org.scalacheck.Gen
 class EngineSuite extends IOSuite {
 
   override def scalaCheckTestParameters =
-    super.scalaCheckTestParameters.withMinSuccessfulTests(2)
+    super.scalaCheckTestParameters.withMinSuccessfulTests(10)
 
   test("Aggregate game events by player id") {
     forAll(Gen.nonEmptyListOf(genEvent)) { events =>

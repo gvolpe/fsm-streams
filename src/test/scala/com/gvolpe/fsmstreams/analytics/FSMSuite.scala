@@ -27,9 +27,6 @@ class FSMSuite extends ScalaCheckSuite {
 
   private val fsm = Engine.fsm[Id](offTicker)
 
-  override def scalaCheckTestParameters =
-    super.scalaCheckTestParameters.withMinSuccessfulTests(2)
-
   test("FSM specification") {
     forAll(genGemCollected, genPuzzleSolved, genLevelUp) { (e1, e2, e3) =>
       val (st1 @ (res1, count1), (out1, tick1)) = fsm.run((Map.empty -> 0), (Some(e1) -> Tick.Off))
