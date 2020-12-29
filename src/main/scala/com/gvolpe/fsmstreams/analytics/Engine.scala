@@ -36,41 +36,29 @@ object Engine {
 
   def fsm[F[_]: Applicative](
       ticker: Ticker[F]
-  ): FSM[F, State, (Option[Event], Tick), Result] = {
-    def go(
-        m: Map[PlayerId, Agg],
-        count: Count,
-        playerId: PlayerId,
-        tick: Tick,
-        f: Agg => Agg
-    ): F[(State, Result)] = {
+  ): FSM[F, State, (Option[Event], Tick), Result] = FSM {
+    case ((m, count), (Some(event), tick)) =>
+      val (playerId, modifier) =
+        event match {
+          case Event.LevelUp(pid, level, _) =>
+            pid -> _Points.modify(_ + 100).andThen(_Level.set(level))
+          case Event.PuzzleSolved(pid, _, _, _) =>
+            pid -> _Points.modify(_ + 50)
+          case Event.GemCollected(pid, gemType, _) =>
+            pid -> _Points.modify(_ + 10).andThen {
+              _Gems.modify(_.updatedWith(gemType)(_.map(_ + 1).orElse(Some(1))))
+            }
+        }
       val agg = m.getOrElse(playerId, Agg.empty)
-      val out = m.updated(playerId, f(agg))
+      val out = m.updated(playerId, modifier(agg))
       val nst = if (tick === Tick.On) Map.empty[PlayerId, Agg] else out
 
       ticker.merge(tick, count).map {
         case (newTick, newCount) =>
           (nst -> newCount) -> (out -> newTick)
       }
-    }
-
-    FSM {
-      case ((m, count), (Some(event), tick)) =>
-        val (playerId, modifier) =
-          event match {
-            case Event.LevelUp(pid, level, _) =>
-              pid -> _Points.modify(_ + 100).andThen(_Level.set(level))
-            case Event.PuzzleSolved(pid, _, _, _) =>
-              pid -> _Points.modify(_ + 50)
-            case Event.GemCollected(pid, gemType, _) =>
-              pid -> _Points.modify(_ + 10).andThen {
-                _Gems.modify(_.updatedWith(gemType)(_.map(_ + 1).orElse(Some(1))))
-              }
-          }
-        go(m, count, playerId, tick, modifier)
-      case ((m, _), (None, _)) =>
-        F.pure((Map.empty -> 0) -> (m -> Tick.On))
-    }
+    case ((m, _), (None, _)) =>
+      F.pure((Map.empty -> 0) -> (m -> Tick.On))
   }
 
 }
