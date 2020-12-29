@@ -1,5 +1,6 @@
 package com.gvolpe.fsmstreams.analytics
 
+import com.gvolpe.fsmstreams.analytics.Agg._
 import com.gvolpe.fsmstreams.analytics.Ticker.Count
 import com.gvolpe.fsmstreams.game._
 import com.gvolpe.fsmstreams.newtype.numeric._
@@ -58,15 +59,13 @@ object Engine {
         val (playerId, modifier) =
           event match {
             case Event.LevelUp(pid, level, _) =>
-              pid -> Agg._Points
-                .modify(_ + 100)
-                .andThen(Agg._Level.set(level))
+              pid -> _Points.modify(_ + 100).andThen(_Level.set(level))
             case Event.PuzzleSolved(pid, _, _, _) =>
-              pid -> Agg._Points.modify(_ + 50)
+              pid -> _Points.modify(_ + 50)
             case Event.GemCollected(pid, gemType, _) =>
-              pid -> Agg._Points
-                .modify(_ + 10)
-                .andThen(Agg._Gems.modify(_.updatedWith(gemType)(_.map(_ + 1).orElse(Some(1)))))
+              pid -> _Points.modify(_ + 10).andThen {
+                _Gems.modify(_.updatedWith(gemType)(_.map(_ + 1).orElse(Some(1))))
+              }
           }
         go(m, count, playerId, tick, modifier)
       case ((m, _), (None, _)) =>
