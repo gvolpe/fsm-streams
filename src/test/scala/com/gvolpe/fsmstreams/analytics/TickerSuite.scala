@@ -4,7 +4,7 @@ package analytics
 import scala.concurrent.duration._
 
 import cats.effect._
-import cats.effect.concurrent.Deferred
+import cats.effect.concurrent._
 import cats.syntax.all._
 
 class TickerSuite extends IOSuite {
@@ -23,12 +23,15 @@ class TickerSuite extends IOSuite {
 
   test("Ticker emits timer ticks every specified time") {
     for {
-      ticker      <- Ticker.create[IO](10, 2.seconds)
-      gate        <- Deferred[IO, Either[Throwable, Unit]]
+      ticker  <- Ticker.create[IO](10, 2.seconds)
+      gate    <- Deferred[IO, Either[Throwable, Unit]]
+      counter <- Ref.of[IO, Int](0)
+      syncer  <- Deferred[IO, Unit]
+      syncAttempt = counter.updateAndGet(_ + 1).flatMap(n => syncer.complete(()).attempt.void.whenA(n > 20))
       counterTick <- ticker.get
-      fb          <- ticker.ticks.interruptWhen(gate).compile.toList.start
-      _           <- IO.sleep(50.millis) // let the ticks run
+      fb          <- ticker.ticks.interruptWhen(gate).evalTap(_ => syncAttempt).compile.toList.start
       _           <- tick(2.seconds.plus(50.millis))
+      _           <- syncer.get // let the ticks run
       _           <- gate.complete(Right(()))
       timerTicks  <- fb.join
     } yield {
@@ -39,12 +42,15 @@ class TickerSuite extends IOSuite {
 
   test("Ticker emits counter ticks every specified number of events") {
     for {
-      ticker       <- Ticker.create[IO](10, 2.seconds)
-      gate         <- Deferred[IO, Either[Throwable, Unit]]
+      ticker  <- Ticker.create[IO](10, 2.seconds)
+      gate    <- Deferred[IO, Either[Throwable, Unit]]
+      counter <- Ref.of[IO, Int](0)
+      syncer  <- Deferred[IO, Unit]
+      syncAttempt = counter.updateAndGet(_ + 1).flatMap(n => syncer.complete(()).attempt.void.whenA(n > 20))
       counterTick1 <- ticker.get
-      fb           <- ticker.ticks.interruptWhen(gate).compile.drain.start
-      _            <- IO.sleep(50.millis) // let the ticks run
+      fb           <- ticker.ticks.interruptWhen(gate).evalTap(_ => syncAttempt).compile.drain.start
       _            <- ticker.merge(Tick.Off, 10)
+      _            <- syncer.get // let the ticks run
       _            <- gate.complete(Right(()))
       _            <- fb.join
       counterTick2 <- ticker.get
