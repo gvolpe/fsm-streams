@@ -39,6 +39,8 @@ lazy val root = (project in file("."))
       monocleCore,
       monocleMacro,
       newtype,
+      catsLaws        % Test,
+      disciplineMunit % Test,
       munitCore       % Test,
       munitScalaCheck % Test
     )
