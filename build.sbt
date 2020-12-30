@@ -31,6 +31,7 @@ lazy val root = (project in file("."))
     licenses += ("Apache-2.0", new URL("https://www.apache.org/licenses/LICENSE-2.0.txt")),
     scalacOptions += "-Ymacro-annotations",
     testFrameworks += new TestFramework("munit.Framework"),
+    parallelExecution in Test := false,
     libraryDependencies ++= Seq(
       CompilerPlugins.betterMonadicFor,
       CompilerPlugins.contextApplied,

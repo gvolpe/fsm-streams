@@ -64,14 +64,17 @@ object Ticker {
             }
 
         def ticks: Stream[F, Tick] = {
-          val d = timeWindow.toNanos
+          val duration = timeWindow.toNanos
+          val interval = FiniteDuration((timeWindow.toSeconds * 0.05).toLong, SECONDS).toNanos
 
           def go(lastSpikeNanos: Long): Stream[F, Tick] =
             Stream.eval((F.monotonic(NANOSECONDS), get).tupled).flatMap {
               case (now, tick) =>
-                if ((now - lastSpikeNanos) > d || tick === Tick.On) Stream.emit(Tick.On) ++ go(now)
+                if ((now - lastSpikeNanos) > duration || (tick === Tick.On && (now - lastSpikeNanos) > interval))
+                  Stream.emit(Tick.On) ++ go(now)
                 else Stream.emit(Tick.Off) ++ go(lastSpikeNanos)
             }
+
           go(0).tail
         }
 

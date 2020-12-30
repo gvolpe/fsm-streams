@@ -48,17 +48,18 @@ class TickerSuite extends IOSuite {
       syncer  <- Deferred[IO, Unit]
       syncAttempt = counter.updateAndGet(_ + 1).flatMap(n => syncer.complete(()).attempt.void.whenA(n > 20))
       counterTick1 <- ticker.get
-      fb           <- ticker.ticks.interruptWhen(gate).evalTap(_ => syncAttempt).compile.drain.start
-      _            <- ticker.merge(Tick.Off, 10)
+      fb           <- ticker.ticks.interruptWhen(gate).evalTap(_ => syncAttempt).compile.toList.start
+      _            <- tick(2.seconds.plus(10.millis))
       _            <- syncer.get // let the ticks run
+      _            <- ticker.merge(Tick.Off, 10)
       _            <- gate.complete(Right(()))
-      _            <- fb.join
+      allTicks     <- fb.join
       counterTick2 <- ticker.get
     } yield {
       assertEquals(counterTick1, Tick.Off)
       assertEquals(counterTick2, Tick.On)
+      assertEquals(allTicks.count(_ === Tick.On), 1)
     }
-
   }
 
 }
